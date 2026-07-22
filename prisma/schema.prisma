@@ -1,0 +1,97 @@
+// DrishAI database schema
+// Dev default: SQLite (zero setup). Swap provider to "postgresql" and set
+// DATABASE_URL to a Supabase/Postgres connection string for production —
+// the schema itself does not need to change.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  phoneNumber   String?
+  passwordHash  String
+  role          String    @default("PATIENT")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // A user with role PATIENT is linked to exactly one Patient record.
+  patientProfile   Patient?  @relation("UserPatientProfile")
+
+  // Doctors/NGO/Admin staff can be the creator of many patient records.
+  createdPatients  Patient[] @relation("PatientCreatedBy")
+
+  @@map("users")
+}
+
+model Patient {
+  id                String   @id @default(cuid())
+  name              String
+  age               Int
+  gender            String
+  diabetesDuration  Int?     // years
+  contactNumber     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Optional link if the patient also has their own login (role PATIENT)
+  userId            String?  @unique
+  user              User?    @relation("UserPatientProfile", fields: [userId], references: [id])
+
+  // Doctor / NGO / Admin who created & manages this patient record
+  createdById       String
+  createdBy         User     @relation("PatientCreatedBy", fields: [createdById], references: [id])
+
+  screenings        ScreeningRecord[]
+
+  @@map("patients")
+}
+
+model ScreeningRecord {
+  id               String     @id @default(cuid())
+  screeningDate    DateTime   @default(now())
+  drStage          String?
+  confidenceScore  Float?
+  recommendation   String?
+  createdAt        DateTime   @default(now())
+
+  patientId        String
+  patient          Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  images           RetinalImage[]
+  analysis         AiAnalysis?
+
+  @@map("screening_records")
+}
+
+model RetinalImage {
+  id           String   @id @default(cuid())
+  imagePath    String
+  eyeSide      String
+  capturedAt   DateTime @default(now())
+
+  screeningId  String
+  screening    ScreeningRecord @relation(fields: [screeningId], references: [id], onDelete: Cascade)
+
+  @@map("retinal_images")
+}
+
+model AiAnalysis {
+  id            String   @id @default(cuid())
+  modelVersion  String
+  heatmapPath   String?
+  analyzedAt    DateTime @default(now())
+
+  screeningId   String   @unique
+  screening     ScreeningRecord @relation(fields: [screeningId], references: [id], onDelete: Cascade)
+
+  @@map("ai_analyses")
+}
