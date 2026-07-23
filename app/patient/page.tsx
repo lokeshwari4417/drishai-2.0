@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 const CARDS = [
-  { title: "Take / upload a scan", desc: "Start a new retinal screening", href: "/patient/screening/new", cta: "Start screening" },
-  { title: "My previous scans", desc: "View past screenings and reports", href: "/patient/screening/history", cta: "View history" },
-  { title: "My profile", desc: "Name, personal info, password", href: "#", cta: "Edit profile" },
-  { title: "Voice assistant & chatbot", desc: "Get guided help through the app", href: "#", cta: "Open assistant" },
+  { title: "Take / upload a scan", desc: "Start a new retinal screening", href: "/patient/scan", cta: "Start screening" },
+  { title: "My previous scans", desc: "View past screenings and reports", href: "/patient/history", cta: "View history" },
+  { title: "My profile", desc: "Name, personal info, password", href: "/patient/profile", cta: "Edit profile" },
+  { title: "Voice assistant & chatbot", desc: "Get guided help through the app", href: "#chatbot", cta: "Open the chat bubble ↘" },
 ];
 
 export default function PatientHome() {

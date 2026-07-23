@@ -12,6 +12,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  PATIENT
+  DOCTOR
+  NGO
+  ADMIN
+}
+
+enum DrStage {
+  NO_DR
+  MILD
+  MODERATE
+  SEVERE
+  PROLIFERATIVE
+}
+
+enum EyeSide {
+  LEFT
+  RIGHT
+}
 
 model User {
   id            String    @id @default(cuid())
@@ -19,7 +38,7 @@ model User {
   email         String    @unique
   phoneNumber   String?
   passwordHash  String
-  role          String    @default("PATIENT")
+  role          Role      @default(PATIENT)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -28,6 +47,9 @@ model User {
 
   // Doctors/NGO/Admin staff can be the creator of many patient records.
   createdPatients  Patient[] @relation("PatientCreatedBy")
+
+  // Screenings an NGO/org has routed to this doctor for review.
+  receivedScreenings ScreeningRecord[] @relation("ScreeningSentToDoctor")
 
   @@map("users")
 }
@@ -58,13 +80,18 @@ model Patient {
 model ScreeningRecord {
   id               String     @id @default(cuid())
   screeningDate    DateTime   @default(now())
-  drStage          String?
+  drStage          DrStage?
   confidenceScore  Float?
   recommendation   String?
   createdAt        DateTime   @default(now())
 
   patientId        String
   patient          Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  // Set when an NGO/org routes this screening to a doctor for review.
+  sentToDoctorId   String?
+  sentToDoctor     User?      @relation("ScreeningSentToDoctor", fields: [sentToDoctorId], references: [id])
+  sentAt           DateTime?
 
   images           RetinalImage[]
   analysis         AiAnalysis?
@@ -75,7 +102,7 @@ model ScreeningRecord {
 model RetinalImage {
   id           String   @id @default(cuid())
   imagePath    String
-  eyeSide      String
+  eyeSide      EyeSide
   capturedAt   DateTime @default(now())
 
   screeningId  String

@@ -1,9 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
-
-type Role = "PATIENT" | "DOCTOR" | "NGO" | "ADMIN";
 
 async function upsertUser(name: string, email: string, role: Role) {
   const passwordHash = await bcrypt.hash("password123", 10);
@@ -15,10 +13,10 @@ async function upsertUser(name: string, email: string, role: Role) {
 }
 
 async function main() {
-  const admin = await upsertUser("Admin User", "admin@drishai.dev", "ADMIN");
-  const doctor = await upsertUser("Dr. Anjali Rao", "doctor@drishai.dev", "DOCTOR");
-  const ngo = await upsertUser("Vision NGO Coordinator", "ngo@drishai.dev", "NGO");
-  const patientUser = await upsertUser("Ravi Kumar", "patient@drishai.dev", "PATIENT");
+  const admin = await upsertUser("Admin User", "admin@drishai.dev", Role.ADMIN);
+  const doctor = await upsertUser("Dr. Anjali Rao", "doctor@drishai.dev", Role.DOCTOR);
+  const ngo = await upsertUser("Vision NGO Coordinator", "ngo@drishai.dev", Role.NGO);
+  const patientUser = await upsertUser("Ravi Kumar", "patient@drishai.dev", Role.PATIENT);
 
   await prisma.patient.upsert({
     where: { userId: patientUser.id },

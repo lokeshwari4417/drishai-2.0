@@ -25,10 +25,9 @@ export default function AdminHome() {
       <div className="card mt-6">
         <h2 className="font-medium text-neutral-900">User management</h2>
         <p className="mt-1 text-sm text-neutral-500">
-          Wire this up to list/edit/deactivate users and change roles via the Prisma
-          <code className="mx-1 rounded bg-neutral-100 px-1.5 py-0.5 text-xs">User</code>
-          model already defined in <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs">prisma/schema.prisma</code>.
+          View every account, change roles, or remove users.
         </p>
+        <a href="/admin/users" className="btn-primary mt-4 inline-flex">Manage users</a>
       </div>
     </div>
   );
