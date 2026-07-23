@@ -2,10 +2,12 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { UploadCloud, ImageIcon } from "lucide-react";
 import { preprocessImage, ProcessedImage } from "@/lib/image-preprocess";
 import { runInference, InferenceResult } from "@/lib/ai-inference";
 import { stageByGrade } from "@/lib/dr-stages";
 import SeverityBadge from "@/components/severity-badge";
+import ScanRing from "@/components/scan-ring";
 
 type Stage = "idle" | "preprocessing" | "inferring" | "done" | "saving" | "error";
 
@@ -14,7 +16,7 @@ export default function ScanUpload({
   reportBasePath,
 }: {
   patientId: string;
-  /** e.g. "/patient/history" or "/doctor/patients/abc123" — where "View full report" links after saving */
+  /** e.g. "/patient/history" or "/report" — where "View full report" links after saving */
   reportBasePath: string;
 }) {
   const router = useRouter();
@@ -26,6 +28,7 @@ export default function ScanUpload({
   const [result, setResult] = useState<InferenceResult | null>(null);
   const [savedScreeningId, setSavedScreeningId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
 
   async function handleFile(file: File) {
     setError(null);
@@ -97,7 +100,7 @@ export default function ScanUpload({
 
   return (
     <div className="card">
-      <h2 className="font-medium text-neutral-900">Take / upload a retinal scan</h2>
+      <h2 className="font-display text-lg text-neutral-900">Take / upload a retinal scan</h2>
       <p className="mt-1 text-sm text-neutral-500">
         JPG or PNG fundus image. Analysis runs on-device in your browser — the image isn't sent anywhere unless you save the result.
       </p>
@@ -111,7 +114,7 @@ export default function ScanUpload({
               type="button"
               onClick={() => setEyeSide(side)}
               disabled={busy}
-              className={`px-3 py-1.5 text-sm ${
+              className={`px-3 py-1.5 text-sm transition-colors ${
                 eyeSide === side ? "bg-brand-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"
               }`}
             >
@@ -122,7 +125,32 @@ export default function ScanUpload({
       </div>
 
       {!processed && (
-        <div className="mt-4">
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragActive(true);
+          }}
+          onDragLeave={() => setDragActive(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragActive(false);
+            const file = e.dataTransfer.files?.[0];
+            if (file) handleFile(file);
+          }}
+          onClick={() => fileInputRef.current?.click()}
+          className={`mt-4 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors ${
+            dragActive ? "border-brand-500 bg-brand-50" : "border-neutral-300 hover:border-brand-300 hover:bg-neutral-50"
+          }`}
+        >
+          {dragActive ? (
+            <UploadCloud className="h-8 w-8 text-brand-500" />
+          ) : (
+            <ImageIcon className="h-8 w-8 text-neutral-400" />
+          )}
+          <p className="text-sm font-medium text-neutral-700">
+            {dragActive ? "Drop to upload" : "Drag & drop a fundus image, or click to browse"}
+          </p>
+          <p className="text-xs text-neutral-400">JPG or PNG</p>
           <input
             ref={fileInputRef}
             type="file"
@@ -133,24 +161,26 @@ export default function ScanUpload({
               const file = e.target.files?.[0];
               if (file) handleFile(file);
             }}
-            className="block w-full text-sm text-neutral-600 file:mr-4 file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-brand-700 hover:file:bg-brand-100"
+            className="hidden"
           />
         </div>
       )}
 
       {(stage === "preprocessing" || stage === "inferring") && (
-        <div className="mt-4 flex items-center gap-2 text-sm text-neutral-500">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-brand-500" />
-          {stage === "preprocessing" ? "Enhancing image…" : "Running on-device AI analysis…"}
+        <div className="mt-6 flex flex-col items-center gap-3 py-4">
+          <ScanRing mode="loading" color={stage === "inferring" ? "#1f7373" : "#e8a33d"} size={88} />
+          <p className="text-sm text-neutral-500">
+            {stage === "preprocessing" ? "Enhancing image…" : "Running on-device AI analysis…"}
+          </p>
         </div>
       )}
 
       {error && (
-        <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        <p className="mt-4 animate-fade-in rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
       )}
 
       {processed && result && stageInfo && (
-        <div className="mt-5 grid gap-4 sm:grid-cols-[160px_1fr]">
+        <div className="mt-5 grid animate-fade-up gap-5 sm:grid-cols-[160px_1fr]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={processed.previewDataUrl}
@@ -159,13 +189,14 @@ export default function ScanUpload({
           />
 
           <div>
-            <div className="flex items-center gap-2">
-              <SeverityBadge stageKey={stageInfo.key} />
-              <span className="text-sm text-neutral-500">
-                {Math.round(result.confidence * 100)}% confidence · {result.inferenceMs}ms
-              </span>
+            <div className="flex items-center gap-4">
+              <ScanRing mode="result" value={result.confidence} color={stageInfo.colorHex} size={72} label="confidence" />
+              <div>
+                <SeverityBadge stageKey={stageInfo.key} />
+                <p className="mt-1 font-mono text-xs text-neutral-400">{result.inferenceMs}ms inference</p>
+              </div>
             </div>
-            <p className="mt-2 text-sm text-neutral-700">{stageInfo.recommendation}</p>
+            <p className="mt-3 text-sm text-neutral-700">{stageInfo.recommendation}</p>
 
             {result.isMock && (
               <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
@@ -181,7 +212,7 @@ export default function ScanUpload({
                   {stage === "saving" ? "Saving…" : "Save to patient record"}
                 </button>
               ) : (
-                <a href={`${reportBasePath}/${savedScreeningId}`} className="btn-primary">
+                <a href={`${reportBasePath}/${savedScreeningId}`} className="btn-primary animate-pop-in">
                   View full report
                 </a>
               )}

@@ -5,16 +5,16 @@ export default function NgoHome() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-neutral-900">Organization dashboard</h1>
+        <div className="animate-fade-up">
+          <h1 className="font-display text-2xl text-neutral-900">Organization dashboard</h1>
           <p className="mt-1 text-sm text-neutral-500">
             Same tools as a Doctor account, plus bulk patient management for screening camps.
           </p>
         </div>
-        <Link href="/ngo/patients/new" className="btn-primary">+ New patient</Link>
+        <Link href="/ngo/patients/new" className="btn-primary animate-fade-up">+ New patient</Link>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 animate-fade-up" style={{ animationDelay: "80ms" }}>
         <PatientTable basePath="/ngo/patients" />
       </div>
 

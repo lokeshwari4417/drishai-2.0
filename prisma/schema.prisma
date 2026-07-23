@@ -1,7 +1,14 @@
 // DrishAI database schema
 // Dev default: SQLite (zero setup). Swap provider to "postgresql" and set
-// DATABASE_URL to a Supabase/Postgres connection string for production —
-// the schema itself does not need to change.
+// DATABASE_URL to a Supabase/Postgres connection string for production.
+//
+// NOTE ON ROLE/DRSTAGE/EYESIDE FIELDS: these are plain Strings, not Prisma
+// enums. SQLite doesn't support native enum types at all, so Prisma refuses
+// to validate a schema that declares `enum` blocks against a sqlite
+// datasource. The set of valid values is enforced at the application layer
+// instead (see the zod schemas in the API routes and the TS union types in
+// lib/auth.ts and lib/dr-stages.ts). If you switch to Postgres/MySQL later,
+// you can optionally convert these back to real `enum` types.
 
 generator client {
   provider = "prisma-client-js"
@@ -12,33 +19,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  PATIENT
-  DOCTOR
-  NGO
-  ADMIN
-}
-
-enum DrStage {
-  NO_DR
-  MILD
-  MODERATE
-  SEVERE
-  PROLIFERATIVE
-}
-
-enum EyeSide {
-  LEFT
-  RIGHT
-}
-
 model User {
   id            String    @id @default(cuid())
   name          String
   email         String    @unique
   phoneNumber   String?
   passwordHash  String
-  role          Role      @default(PATIENT)
+  // One of: PATIENT | DOCTOR | NGO | ADMIN — validated by zod at the API layer.
+  role          String    @default("PATIENT")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -80,7 +68,8 @@ model Patient {
 model ScreeningRecord {
   id               String     @id @default(cuid())
   screeningDate    DateTime   @default(now())
-  drStage          DrStage?
+  // One of: NO_DR | MILD | MODERATE | SEVERE | PROLIFERATIVE
+  drStage          String?
   confidenceScore  Float?
   recommendation   String?
   createdAt        DateTime   @default(now())
@@ -102,7 +91,8 @@ model ScreeningRecord {
 model RetinalImage {
   id           String   @id @default(cuid())
   imagePath    String
-  eyeSide      EyeSide
+  // One of: LEFT | RIGHT
+  eyeSide      String
   capturedAt   DateTime @default(now())
 
   screeningId  String

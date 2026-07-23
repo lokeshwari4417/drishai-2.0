@@ -6,6 +6,7 @@ import { stageByKey } from "@/lib/dr-stages";
 import SeverityBadge from "@/components/severity-badge";
 import ReportReadAloud from "@/components/report-read-aloud";
 import SendToDoctorForm from "@/components/send-to-doctor-form";
+import ScanRing from "@/components/scan-ring";
 
 export default async function ReportDetail({ screeningId }: { screeningId: string }) {
   const session = await getServerSession(authOptions);
@@ -40,9 +41,9 @@ export default async function ReportDetail({ screeningId }: { screeningId: strin
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex animate-fade-up items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900">Screening report</h1>
+          <h1 className="font-display text-2xl text-neutral-900">Screening report</h1>
           <p className="mt-1 text-sm text-neutral-500">
             {screening.patient.name} · {new Date(screening.screeningDate).toLocaleString()}
           </p>
@@ -50,7 +51,7 @@ export default async function ReportDetail({ screeningId }: { screeningId: strin
         <ReportReadAloud text={readText} />
       </div>
 
-      <div className="mt-6 grid gap-6 sm:grid-cols-[280px_1fr]">
+      <div className="mt-6 grid animate-fade-up gap-6 sm:grid-cols-[280px_1fr]" style={{ animationDelay: "80ms" }}>
         <div>
           {screening.images.map((img) => (
             // eslint-disable-next-line @next/next/no-img-element
@@ -68,15 +69,15 @@ export default async function ReportDetail({ screeningId }: { screeningId: strin
 
         <div className="space-y-4">
           <div className="card">
-            <div className="flex items-center gap-2">
-              <SeverityBadge stageKey={screening.drStage} />
-              {confidencePct !== null && (
-                <span className="text-sm text-neutral-500">{confidencePct}% confidence</span>
+            <div className="flex items-center gap-4">
+              {stage && confidencePct !== null && (
+                <ScanRing mode="result" value={screening.confidenceScore ?? 0} color={stage.colorHex} size={72} label="confidence" />
               )}
+              <SeverityBadge stageKey={screening.drStage} />
             </div>
             <p className="mt-3 text-sm text-neutral-700">{screening.recommendation}</p>
             {screening.analysis && (
-              <p className="mt-3 text-xs text-neutral-400">
+              <p className="mt-3 font-mono text-xs text-neutral-400">
                 Model: {screening.analysis.modelVersion} · Analyzed {new Date(screening.analysis.analyzedAt).toLocaleString()}
               </p>
             )}

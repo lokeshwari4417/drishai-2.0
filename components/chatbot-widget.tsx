@@ -46,7 +46,7 @@ export default function ChatbotWidget() {
   return (
     <div className="fixed bottom-5 right-5 z-50">
       {open && (
-        <div className="mb-3 flex h-[420px] w-80 flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-xl">
+        <div className="mb-3 flex h-[420px] w-80 origin-bottom-right animate-pop-in flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-xl">
           <div className="flex items-center justify-between border-b border-neutral-200 bg-brand-600 px-4 py-3">
             <span className="text-sm font-medium text-white">DrishAI Assistant</span>
             <button onClick={() => setOpen(false)} className="text-white/80 hover:text-white">
@@ -58,7 +58,7 @@ export default function ChatbotWidget() {
             {messages.map((m, i) => (
               <div
                 key={i}
-                className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                className={`max-w-[85%] animate-fade-up rounded-2xl px-3 py-2 text-sm ${
                   m.role === "user"
                     ? "ml-auto bg-brand-600 text-white"
                     : "bg-neutral-100 text-neutral-800"
@@ -97,7 +97,7 @@ export default function ChatbotWidget() {
 
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg transition hover:bg-brand-700"
+        className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg transition-all duration-150 hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-xl active:scale-95"
         aria-label="Open chatbot"
       >
         {open ? <X size={22} /> : <MessageCircle size={22} />}

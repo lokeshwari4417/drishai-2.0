@@ -1,32 +1,24 @@
-import Link from "next/link";
+import { ScanEye, History, UserCircle, MessageCircle } from "lucide-react";
+import DashboardCard from "@/components/dashboard-card";
 
 const CARDS = [
-  { title: "Take / upload a scan", desc: "Start a new retinal screening", href: "/patient/scan", cta: "Start screening" },
-  { title: "My previous scans", desc: "View past screenings and reports", href: "/patient/history", cta: "View history" },
-  { title: "My profile", desc: "Name, personal info, password", href: "/patient/profile", cta: "Edit profile" },
-  { title: "Voice assistant & chatbot", desc: "Get guided help through the app", href: "#chatbot", cta: "Open the chat bubble ↘" },
+  { icon: ScanEye, title: "Take / upload a scan", desc: "Start a new retinal screening", href: "/patient/scan", cta: "Start screening" },
+  { icon: History, title: "My previous scans", desc: "View past screenings and reports", href: "/patient/history", cta: "View history" },
+  { icon: UserCircle, title: "My profile", desc: "Name, personal info, password", href: "/patient/profile", cta: "Edit profile" },
+  { icon: MessageCircle, title: "Voice assistant & chatbot", desc: "Get guided help through the app", href: "#chatbot", cta: "Open the chat bubble" },
 ];
 
 export default function PatientHome() {
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-neutral-900">Welcome back</h1>
-      <p className="mt-1 text-sm text-neutral-500">
-        This is your patient dashboard. Scan capture, history, and reporting are
-        built next — this scaffold gives you working auth and routing to build on.
+      <h1 className="animate-fade-up font-display text-2xl text-neutral-900">Welcome back</h1>
+      <p className="mt-1 animate-fade-up text-sm text-neutral-500" style={{ animationDelay: "40ms" }}>
+        This is your patient dashboard.
       </p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      <div className="stagger mt-6 grid gap-4 sm:grid-cols-2">
         {CARDS.map((c) => (
-          <div key={c.title} className="card flex flex-col justify-between">
-            <div>
-              <h2 className="font-medium text-neutral-900">{c.title}</h2>
-              <p className="mt-1 text-sm text-neutral-500">{c.desc}</p>
-            </div>
-            <Link href={c.href} className="btn-secondary mt-4 self-start">
-              {c.cta}
-            </Link>
-          </div>
+          <DashboardCard key={c.title} {...c} />
         ))}
       </div>
     </div>

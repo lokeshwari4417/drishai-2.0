@@ -65,10 +65,10 @@ export default function RegisterPage() {
     <main className="flex min-h-screen flex-col">
       <DisclaimerBanner />
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-10">
-        <h1 className="text-2xl font-semibold text-neutral-900">Create your DrishAI account</h1>
-        <p className="mt-1 text-sm text-neutral-500">Choose the role that matches how you'll use DrishAI.</p>
+        <h1 className="animate-fade-up font-display text-2xl text-neutral-900">Create your DrishAI account</h1>
+        <p className="mt-1 animate-fade-up text-sm text-neutral-500" style={{ animationDelay: "40ms" }}>Choose the role that matches how you'll use DrishAI.</p>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-6 animate-fade-up space-y-4" style={{ animationDelay: "80ms" }}>
           <div>
             <label className="label">I am a...</label>
             <div className="grid grid-cols-2 gap-2">

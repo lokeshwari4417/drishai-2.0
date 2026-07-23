@@ -17,9 +17,11 @@ export default function DashboardNav({
   role: string;
 }) {
   return (
-    <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4">
-      <div className="flex items-center gap-2">
-        <span className="text-lg font-semibold text-brand-700">DrishAI</span>
+    <header className="sticky top-0 z-40 flex items-center justify-between border-b border-neutral-200 bg-white/90 px-6 py-4 backdrop-blur">
+      <div className="flex items-center gap-2.5">
+        <span className="font-display text-xl italic tracking-tight text-brand-700">
+          Drish<span className="not-italic">AI</span>
+        </span>
         <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700">
           {ROLE_LABELS[role] ?? role}
         </span>

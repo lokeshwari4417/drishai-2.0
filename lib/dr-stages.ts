@@ -6,6 +6,7 @@ export const DR_STAGES: {
   label: string;
   recommendation: string;
   colorClass: string;
+  colorHex: string; // matches tailwind.config.ts `severity` palette — used where a raw CSS color is needed (e.g. ScanRing)
 }[] = [
   {
     key: "NO_DR",
@@ -13,6 +14,7 @@ export const DR_STAGES: {
     label: "No DR",
     recommendation: "No signs of diabetic retinopathy detected. Continue annual screening.",
     colorClass: "bg-severity-0",
+    colorHex: "#2e9e82",
   },
   {
     key: "MILD",
@@ -20,6 +22,7 @@ export const DR_STAGES: {
     label: "Mild",
     recommendation: "Early-stage changes detected. Re-screen in 9–12 months and maintain glycemic control.",
     colorClass: "bg-severity-1",
+    colorHex: "#8fbf3f",
   },
   {
     key: "MODERATE",
@@ -27,6 +30,7 @@ export const DR_STAGES: {
     label: "Moderate",
     recommendation: "Noticeable retinal changes. Recommend follow-up with an ophthalmologist within 6 months.",
     colorClass: "bg-severity-2",
+    colorHex: "#e8a33d",
   },
   {
     key: "SEVERE",
@@ -34,6 +38,7 @@ export const DR_STAGES: {
     label: "Severe",
     recommendation: "Significant retinal damage detected. Recommend ophthalmologist referral within 1 month.",
     colorClass: "bg-severity-3",
+    colorHex: "#e2703a",
   },
   {
     key: "PROLIFERATIVE",
@@ -41,6 +46,7 @@ export const DR_STAGES: {
     label: "Proliferative DR",
     recommendation: "Advanced, sight-threatening changes detected. Urgent ophthalmologist referral advised.",
     colorClass: "bg-severity-4",
+    colorHex: "#c43d3d",
   },
 ];
 

@@ -41,12 +41,12 @@ export default function LoginPage() {
     <main className="flex min-h-screen flex-col">
       <DisclaimerBanner />
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6">
-        <h1 className="text-2xl font-semibold text-neutral-900">Log in to DrishAI</h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <h1 className="animate-fade-up font-display text-2xl text-neutral-900">Log in to DrishAI</h1>
+        <p className="mt-1 animate-fade-up text-sm text-neutral-500" style={{ animationDelay: "40ms" }}>
           Use your registered email and password.
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-6 animate-fade-up space-y-4" style={{ animationDelay: "80ms" }}>
           <div>
             <label className="label" htmlFor="email">Email</label>
             <input
