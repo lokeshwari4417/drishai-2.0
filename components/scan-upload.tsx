@@ -6,6 +6,7 @@ import { UploadCloud, ImageIcon } from "lucide-react";
 import { preprocessImage, ProcessedImage } from "@/lib/image-preprocess";
 import { runInference, InferenceResult } from "@/lib/ai-inference";
 import { stageByGrade } from "@/lib/dr-stages";
+import { enqueueScreening, isNetworkError } from "@/lib/offline-queue";
 import SeverityBadge from "@/components/severity-badge";
 import ScanRing from "@/components/scan-ring";
 
@@ -27,6 +28,7 @@ export default function ScanUpload({
   const [processed, setProcessed] = useState<ProcessedImage | null>(null);
   const [result, setResult] = useState<InferenceResult | null>(null);
   const [savedScreeningId, setSavedScreeningId] = useState<string | null>(null);
+  const [queuedOffline, setQueuedOffline] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
@@ -81,7 +83,22 @@ export default function ScanUpload({
       router.refresh();
     } catch (err) {
       console.error(err);
-      setError("Couldn't save this screening. If you're offline, it will need to be retried once you're back online.");
+
+      if (isNetworkError(err) && processed && result) {
+        enqueueScreening({
+          patientId,
+          eyeSide,
+          imageDataUrl: processed.previewDataUrl,
+          grade: result.grade,
+          confidence: result.confidence,
+          modelVersion: result.modelVersion,
+        });
+        setQueuedOffline(true);
+        setStage("done");
+        return;
+      }
+
+      setError("Couldn't save this screening. Please try again.");
       setStage("error");
     }
   }
@@ -91,6 +108,7 @@ export default function ScanUpload({
     setProcessed(null);
     setResult(null);
     setSavedScreeningId(null);
+    setQueuedOffline(false);
     setError(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
@@ -206,18 +224,24 @@ export default function ScanUpload({
               </p>
             )}
 
+            {queuedOffline && (
+              <p className="mt-2 flex items-center gap-1.5 rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-800">
+                No connection right now — this screening is saved on this device and will sync automatically once you're back online.
+              </p>
+            )}
+
             <div className="mt-4 flex gap-2">
-              {!savedScreeningId ? (
+              {!savedScreeningId && !queuedOffline ? (
                 <button onClick={handleSave} disabled={busy} className="btn-primary">
                   {stage === "saving" ? "Saving…" : "Save to patient record"}
                 </button>
-              ) : (
+              ) : savedScreeningId ? (
                 <a href={`${reportBasePath}/${savedScreeningId}`} className="btn-primary animate-pop-in">
                   View full report
                 </a>
-              )}
+              ) : null}
               <button onClick={reset} disabled={busy} className="btn-secondary">
-                {savedScreeningId ? "Screen another eye" : "Discard"}
+                {savedScreeningId || queuedOffline ? "Screen another eye" : "Discard"}
               </button>
             </div>
           </div>
