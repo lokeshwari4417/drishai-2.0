@@ -24,6 +24,7 @@ export default function ChatbotWidget() {
 
   async function send(text: string) {
     if (!text.trim() || sending) return;
+    const history = messages.slice(-10).map((m) => ({ role: m.role, text: m.text }));
     setMessages((m) => [...m, { role: "user", text }]);
     setInput("");
     setSending(true);
@@ -32,7 +33,7 @@ export default function ChatbotWidget() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ message: text, history }),
       });
       const data = await res.json();
       setMessages((m) => [...m, { role: "assistant", text: data.reply ?? "Sorry, I didn't catch that." }]);
