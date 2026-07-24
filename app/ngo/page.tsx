@@ -6,8 +6,8 @@ export default function NgoHome() {
     <div>
       <div className="flex items-center justify-between">
         <div className="animate-fade-up">
-          <h1 className="font-display text-2xl text-neutral-900">Organization dashboard</h1>
-          <p className="mt-1 text-sm text-neutral-500">
+          <h1 className="font-display text-2xl text-neutral-900 dark:text-neutral-50">Organization dashboard</h1>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
             Same tools as a Doctor account, plus bulk patient management for screening camps.
           </p>
         </div>

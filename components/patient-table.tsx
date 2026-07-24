@@ -40,7 +40,7 @@ export default function PatientTable({ basePath }: { basePath: string }) {
 
   return (
     <div className="card overflow-hidden !p-0">
-      <div className="flex items-center justify-between border-b border-neutral-200 p-4">
+      <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700/60 p-4">
         <input
           className="input-field max-w-xs"
           placeholder="Search patients by name…"
@@ -50,7 +50,7 @@ export default function PatientTable({ basePath }: { basePath: string }) {
       </div>
 
       <table className="w-full text-left text-sm">
-        <thead className="border-b border-neutral-200 bg-neutral-50 text-neutral-500">
+        <thead className="border-b border-neutral-200 dark:border-neutral-700/60 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400">
           <tr>
             <th className="px-4 py-3 font-medium">Name</th>
             <th className="px-4 py-3 font-medium">Age / Gender</th>
@@ -67,12 +67,12 @@ export default function PatientTable({ basePath }: { basePath: string }) {
           )}
           {!error && patients === null && (
             <tr>
-              <td colSpan={5} className="px-4 py-8 text-center text-neutral-400">Loading…</td>
+              <td colSpan={5} className="px-4 py-8 text-center text-neutral-400 dark:text-neutral-500">Loading…</td>
             </tr>
           )}
           {!error && patients?.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-4 py-8 text-center text-neutral-400">
+              <td colSpan={5} className="px-4 py-8 text-center text-neutral-400 dark:text-neutral-500">
                 No patients yet — add your first one to get started.
               </td>
             </tr>
@@ -80,17 +80,17 @@ export default function PatientTable({ basePath }: { basePath: string }) {
           {patients?.map((p) => {
             const latest = p.screenings[0];
             return (
-              <tr key={p.id} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
-                <td className="px-4 py-3 font-medium text-neutral-900">{p.name}</td>
-                <td className="px-4 py-3 text-neutral-600">{p.age} · {p.gender}</td>
-                <td className="px-4 py-3 text-neutral-600">
+              <tr key={p.id} className="border-b border-neutral-100 dark:border-neutral-700/40 last:border-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/30">
+                <td className="px-4 py-3 font-medium text-neutral-900 dark:text-neutral-100">{p.name}</td>
+                <td className="px-4 py-3 text-neutral-600 dark:text-neutral-350">{p.age} · {p.gender}</td>
+                <td className="px-4 py-3 text-neutral-600 dark:text-neutral-350">
                   {latest ? new Date(latest.screeningDate).toLocaleDateString() : "—"}
                 </td>
                 <td className="px-4 py-3">
                   <SeverityBadge stageKey={latest?.drStage} />
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <Link href={`${basePath}/${p.id}`} className="text-sm font-medium text-brand-700 hover:underline">
+                  <Link href={`${basePath}/${p.id}`} className="text-sm font-medium text-brand-700 dark:text-brand-400 hover:underline">
                     View →
                   </Link>
                 </td>

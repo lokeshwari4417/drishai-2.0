@@ -56,8 +56,11 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     return NextResponse.json({ error: "doctorId is required" }, { status: 400 });
   }
 
-  const doctor = await prisma.user.findUnique({ where: { id: parsed.data.doctorId } });
-  if (!doctor || doctor.role !== "DOCTOR") {
+  const doctor = await prisma.user.findUnique({
+    where: { id: parsed.data.doctorId },
+    include: { role: true },
+  });
+  if (!doctor || doctor.role.name !== "DOCTOR") {
     return NextResponse.json({ error: "Selected user is not a doctor" }, { status: 400 });
   }
 

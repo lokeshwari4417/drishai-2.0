@@ -14,7 +14,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 transition-colors duration-200">
       <DashboardNav name={session.user.name} role={session.user.role} />
       <DisclaimerBanner />
       <ChatbotWidget />

@@ -37,8 +37,23 @@ export async function POST(req: Request) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
+    const dbRole = await prisma.role.findUnique({
+      where: { name: role },
+    });
+
+    if (!dbRole) {
+      return NextResponse.json({ error: "Invalid role selected" }, { status: 400 });
+    }
+
     const user = await prisma.user.create({
-      data: { name, email: normalizedEmail, passwordHash, role },
+      data: {
+        name,
+        email: normalizedEmail,
+        passwordHash,
+        roleId: dbRole.id,
+        isBlocked: role === "DOCTOR" || role === "NGO", // Doctors and NGOs require admin approval
+      },
+      include: { role: true },
     });
 
     // Patients get a linked Patient record automatically so they can
@@ -55,7 +70,12 @@ export async function POST(req: Request) {
       });
     }
 
-    return NextResponse.json({ id: user.id, email: user.email, role: user.role }, { status: 201 });
+    // Send welcome email asynchronously
+    import("@/lib/mail").then(({ sendWelcomeEmail }) => {
+      sendWelcomeEmail(user.email, user.name);
+    }).catch(console.error);
+
+    return NextResponse.json({ id: user.id, email: user.email, role: user.role.name, isBlocked: user.isBlocked }, { status: 201 });
   } catch (err) {
     console.error("Register error:", err);
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });

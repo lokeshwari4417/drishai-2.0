@@ -24,6 +24,7 @@ export default function RegisterPage() {
   const [gender, setGender] = useState("Female");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -52,9 +53,15 @@ export default function RegisterPage() {
         return;
       }
 
+      setLoading(false);
+
+      if (data.isBlocked) {
+        setSuccessMessage("Your registration request has been submitted to the administrator. You will be able to log in once the administrator approves your access.");
+        return;
+      }
+
       // Auto-login right after successful registration.
       const result = await signIn("credentials", { email, password, redirect: false });
-      setLoading(false);
 
       if (result?.error) {
         router.push("/login");
@@ -67,6 +74,25 @@ export default function RegisterPage() {
       setLoading(false);
       setError("Something went wrong. Please try again.");
     }
+  }
+
+  if (successMessage) {
+    return (
+      <main className="flex min-h-screen flex-col">
+        <DisclaimerBanner />
+        <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-10 animate-fade-up">
+          <div className="card text-center">
+            <h1 className="font-display text-2xl font-bold text-neutral-900 dark:text-neutral-50">Registration Submitted</h1>
+            <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+              {successMessage}
+            </p>
+            <Link href="/login" className="btn-primary mt-6 inline-block w-full text-center">
+              Back to Login
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   return (

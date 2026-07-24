@@ -32,7 +32,7 @@ export default async function ReportDetail({ screeningId }: { screeningId: strin
 
   if (!allowed) redirect("/login");
 
-  const stage = screening.drStage ? stageByKey(screening.drStage) : null;
+  const stage = screening.drStage ? stageByKey(screening.drStage as any) : null;
   const confidencePct = screening.confidenceScore ? Math.round(screening.confidenceScore * 100) : null;
 
   const readText = stage
@@ -73,7 +73,7 @@ export default async function ReportDetail({ screeningId }: { screeningId: strin
               {stage && confidencePct !== null && (
                 <ScanRing mode="result" value={screening.confidenceScore ?? 0} color={stage.colorHex} size={72} label="confidence" />
               )}
-              <SeverityBadge stageKey={screening.drStage} />
+              <SeverityBadge stageKey={screening.drStage as any} />
             </div>
             <p className="mt-3 text-sm text-neutral-700">{screening.recommendation}</p>
             {screening.analysis && (

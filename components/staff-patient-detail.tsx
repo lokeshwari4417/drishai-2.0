@@ -36,7 +36,7 @@ export default async function StaffPatientDetail({ patientId }: { patientId: str
               <p className="mt-1 text-sm text-neutral-500">{patient.contactNumber}</p>
             )}
           </div>
-          <SeverityBadge stageKey={patient.screenings[0]?.drStage} />
+          <SeverityBadge stageKey={patient.screenings[0]?.drStage as any} />
         </div>
       </div>
 
@@ -55,7 +55,7 @@ export default async function StaffPatientDetail({ patientId }: { patientId: str
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={s.images[0].imagePath} alt="Fundus scan" className="mb-3 h-32 w-full rounded-lg object-cover" />
               )}
-              <SeverityBadge stageKey={s.drStage} />
+              <SeverityBadge stageKey={s.drStage as any} />
               <p className="mt-2 text-xs text-neutral-500">{new Date(s.screeningDate).toLocaleDateString()}</p>
             </Link>
           ))}

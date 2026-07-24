@@ -12,8 +12,8 @@ const NAV_CARDS = [
 export default function PatientHome() {
   return (
     <div>
-      <h1 className="animate-fade-up font-display text-2xl text-neutral-900">Welcome back</h1>
-      <p className="mt-1 animate-fade-up text-sm text-neutral-500" style={{ animationDelay: "40ms" }}>
+      <h1 className="animate-fade-up font-display text-2xl text-neutral-900 dark:text-neutral-50">Welcome back</h1>
+      <p className="mt-1 animate-fade-up text-sm text-neutral-500 dark:text-neutral-400" style={{ animationDelay: "40ms" }}>
         This is your patient dashboard.
       </p>
 

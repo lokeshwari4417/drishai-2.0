@@ -44,7 +44,7 @@ export default async function PatientHistoryPage() {
                   className="mb-3 h-32 w-full rounded-lg object-cover"
                 />
               )}
-              <SeverityBadge stageKey={s.drStage} />
+              <SeverityBadge stageKey={s.drStage as any} />
               <p className="mt-2 text-xs text-neutral-500">
                 {new Date(s.screeningDate).toLocaleDateString()}
               </p>

@@ -37,6 +37,7 @@ async function main() {
 
   // 2. Seed Users
   const admin = await upsertUser("Admin User", "admin@drishai.dev", "ADMIN");
+  const myAdmin = await upsertUser("Logeshwari Admin", "lokeshwariiiiii.1@gmail.com", "ADMIN");
   const doctor = await upsertUser("Dr. Anjali Rao", "doctor@drishai.dev", "DOCTOR");
   const ngo = await upsertUser("Vision NGO Coordinator", "ngo@drishai.dev", "NGO");
   const patientUser = await upsertUser("Ravi Kumar", "patient@drishai.dev", "PATIENT");
@@ -48,6 +49,11 @@ async function main() {
     where: { userId: admin.id },
     update: {},
     create: { userId: admin.id },
+  });
+  await prisma.admin.upsert({
+    where: { userId: myAdmin.id },
+    update: {},
+    create: { userId: myAdmin.id },
   });
   console.log("Admin profile created.");
 
