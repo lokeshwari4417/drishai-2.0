@@ -31,9 +31,15 @@ export default function ProfileForm({
 
   async function saveInfo(e: FormEvent) {
     e.preventDefault();
-    setInfoLoading(true);
     setInfoError(null);
     setInfoSaved(false);
+
+    if (ageVal && (Number(ageVal) < 0 || Number(ageVal) > 130 || !Number.isInteger(Number(ageVal)))) {
+      setInfoError("Please enter a valid age between 0 and 130.");
+      return;
+    }
+
+    setInfoLoading(true);
 
     try {
       const res = await fetch("/api/profile", {
@@ -93,7 +99,14 @@ export default function ProfileForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="label">Age</label>
-              <input type="number" className="input-field" value={ageVal} onChange={(e) => setAgeVal(e.target.value)} />
+              <input
+                type="number"
+                min={0}
+                max={130}
+                className="input-field"
+                value={ageVal}
+                onChange={(e) => setAgeVal(e.target.value)}
+              />
             </div>
             <div>
               <label className="label">Gender</label>

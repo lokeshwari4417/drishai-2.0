@@ -11,7 +11,10 @@ export default function NgoHome() {
             Same tools as a Doctor account, plus bulk patient management for screening camps.
           </p>
         </div>
-        <Link href="/ngo/patients/new" className="btn-primary animate-fade-up">+ New patient</Link>
+        <div className="flex animate-fade-up gap-2">
+          <Link href="/ngo/patients/import" className="btn-secondary">Bulk import (CSV)</Link>
+          <Link href="/ngo/patients/new" className="btn-primary">+ New patient</Link>
+        </div>
       </div>
 
       <div className="mt-6 animate-fade-up" style={{ animationDelay: "80ms" }}>

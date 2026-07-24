@@ -12,6 +12,12 @@ export default function DoctorHome() {
         <Link href="/doctor/patients/new" className="btn-primary animate-fade-up">+ New patient</Link>
       </div>
 
+      <div className="mt-4 animate-fade-up">
+        <Link href="/doctor/triage" className="text-sm font-medium text-brand-700 hover:underline">
+          View triage queue (most severe cases first) →
+        </Link>
+      </div>
+
       <div className="mt-6 animate-fade-up" style={{ animationDelay: "80ms" }}>
         <PatientTable basePath="/doctor/patients" />
       </div>
