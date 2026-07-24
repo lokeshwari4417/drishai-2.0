@@ -25,23 +25,10 @@ export default function LoginPage() {
     });
 
     if (result?.error) {
-      // next-auth normalizes credential errors to a generic code, so we
-      // determine the specific reason ourselves for a clearer message.
-      try {
-        const check = await fetch("/api/auth/user-exists", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
-        const { exists } = await check.json();
-        setError(
-          exists
-            ? "Incorrect password. Try again or reset your password."
-            : "No account found with that email. Check the address or register."
-        );
-      } catch {
-        setError("Couldn't log in. Please check your details and try again.");
-      }
+      // Deliberately generic: we don't reveal whether the email exists
+      // or the password was wrong, to avoid leaking which emails are
+      // registered.
+      setError("The email or password you entered is incorrect. Please try again.");
       setLoading(false);
       return;
     }

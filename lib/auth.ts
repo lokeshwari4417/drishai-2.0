@@ -47,13 +47,12 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email.toLowerCase() },
         });
 
-        if (!user) {
-          throw new Error("No account found with that email");
-        }
+        const isValid = user
+          ? await bcrypt.compare(credentials.password, user.passwordHash)
+          : false;
 
-        const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
-        if (!isValid) {
-          throw new Error("Incorrect password");
+        if (!user || !isValid) {
+          throw new Error("Invalid email or password");
         }
 
         return {
