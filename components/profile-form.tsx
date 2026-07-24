@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { signOut } from "next-auth/react";
+import { useToast } from "@/components/toast";
 
 export default function ProfileForm({
   name,
@@ -9,33 +10,38 @@ export default function ProfileForm({
   age,
   gender,
   contactNumber,
+  isPatient = false,
 }: {
   name: string;
   email: string;
   age?: number;
   gender?: string;
   contactNumber?: string;
+  isPatient?: boolean;
 }) {
+  const [nameVal, setNameVal] = useState(name);
   const [ageVal, setAgeVal] = useState(age?.toString() ?? "");
   const [genderVal, setGenderVal] = useState(gender ?? "Female");
   const [contactVal, setContactVal] = useState(contactNumber ?? "");
-  const [infoSaved, setInfoSaved] = useState(false);
-  const [infoError, setInfoError] = useState<string | null>(null);
+  
   const [infoLoading, setInfoLoading] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [pwSaved, setPwSaved] = useState(false);
-  const [pwError, setPwError] = useState<string | null>(null);
   const [pwLoading, setPwLoading] = useState(false);
+
+  const toast = useToast();
 
   async function saveInfo(e: FormEvent) {
     e.preventDefault();
-    setInfoError(null);
-    setInfoSaved(false);
 
-    if (ageVal && (Number(ageVal) < 0 || Number(ageVal) > 130 || !Number.isInteger(Number(ageVal)))) {
-      setInfoError("Please enter a valid age between 0 and 130.");
+    if (!nameVal.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+
+    if (isPatient && ageVal && (Number(ageVal) < 0 || Number(ageVal) > 130 || !Number.isInteger(Number(ageVal)))) {
+      toast.error("Please enter a valid age between 0 and 130.");
       return;
     }
 
@@ -46,15 +52,19 @@ export default function ProfileForm({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...(ageVal ? { age: Number(ageVal) } : {}),
-          gender: genderVal,
+          name: nameVal,
           contactNumber: contactVal,
+          ...(isPatient && ageVal ? { age: Number(ageVal) } : {}),
+          ...(isPatient ? { gender: genderVal } : {}),
         }),
       });
-      if (!res.ok) throw new Error((await res.json()).error ?? "Save failed");
-      setInfoSaved(true);
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Save failed");
+      
+      toast.success("Profile information updated successfully.");
     } catch (err: any) {
-      setInfoError(err.message ?? "Save failed");
+      toast.error(err.message ?? "Save failed");
     } finally {
       setInfoLoading(false);
     }
@@ -62,9 +72,18 @@ export default function ProfileForm({
 
   async function changePassword(e: FormEvent) {
     e.preventDefault();
+    
+    if (!currentPassword || !newPassword) {
+      toast.error("Both password fields are required.");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      toast.error("New password must be at least 8 characters long.");
+      return;
+    }
+
     setPwLoading(true);
-    setPwError(null);
-    setPwSaved(false);
 
     try {
       const res = await fetch("/api/profile/password", {
@@ -72,12 +91,15 @@ export default function ProfileForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword, newPassword }),
       });
-      if (!res.ok) throw new Error((await res.json()).error ?? "Couldn't change password");
-      setPwSaved(true);
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Couldn't change password");
+      
+      toast.success("Password updated successfully.");
       setCurrentPassword("");
       setNewPassword("");
     } catch (err: any) {
-      setPwError(err.message ?? "Couldn't change password");
+      toast.error(err.message ?? "Couldn't change password");
     } finally {
       setPwLoading(false);
     }
@@ -85,86 +107,112 @@ export default function ProfileForm({
 
   return (
     <div className="space-y-6">
-      <div className="card">
-        <h2 className="font-medium text-neutral-900">Personal information</h2>
+      <div className="card bg-white dark:bg-neutral-800 dark:border-neutral-700/60 shadow-sm">
+        <h2 className="font-semibold text-neutral-900 dark:text-neutral-50 border-b border-neutral-100 dark:border-neutral-700/60 pb-3">
+          Personal Information
+        </h2>
         <form onSubmit={saveInfo} className="mt-4 space-y-4">
           <div>
-            <label className="label">Name</label>
-            <input className="input-field bg-neutral-50" value={name} disabled />
+            <label className="label dark:text-neutral-300">Name</label>
+            <input
+              className="input-field dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-50"
+              value={nameVal}
+              onChange={(e) => setNameVal(e.target.value)}
+              placeholder="Your full name"
+            />
           </div>
           <div>
-            <label className="label">Email</label>
-            <input className="input-field bg-neutral-50" value={email} disabled />
+            <label className="label dark:text-neutral-300">Email Address</label>
+            <input
+              className="input-field bg-neutral-50 dark:bg-neutral-900/50 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 cursor-not-allowed"
+              value={email}
+              disabled
+            />
+            <p className="mt-1 text-[11px] text-neutral-400 dark:text-neutral-500">Registered email cannot be changed.</p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="label">Age</label>
-              <input
-                type="number"
-                min={0}
-                max={130}
-                className="input-field"
-                value={ageVal}
-                onChange={(e) => setAgeVal(e.target.value)}
-              />
+          
+          {isPatient && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="label dark:text-neutral-300">Age</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={130}
+                  className="input-field dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-50"
+                  value={ageVal}
+                  onChange={(e) => setAgeVal(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="label dark:text-neutral-300">Gender</label>
+                <select
+                  className="input-field dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-50"
+                  value={genderVal}
+                  onChange={(e) => setGenderVal(e.target.value)}
+                >
+                  <option>Female</option>
+                  <option>Male</option>
+                  <option>Other</option>
+                  <option>Prefer not to say</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="label">Gender</label>
-              <select className="input-field" value={genderVal} onChange={(e) => setGenderVal(e.target.value)}>
-                <option>Female</option>
-                <option>Male</option>
-                <option>Other</option>
-                <option>Prefer not to say</option>
-              </select>
-            </div>
-          </div>
+          )}
+
           <div>
-            <label className="label">Contact number</label>
-            <input className="input-field" value={contactVal} onChange={(e) => setContactVal(e.target.value)} />
+            <label className="label dark:text-neutral-300">Contact Number</label>
+            <input
+              className="input-field dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-50"
+              value={contactVal}
+              onChange={(e) => setContactVal(e.target.value)}
+              placeholder="e.g. +91 98765 43210"
+            />
           </div>
 
-          {infoError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{infoError}</p>}
-          {infoSaved && <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">Saved.</p>}
-
-          <button type="submit" disabled={infoLoading} className="btn-primary">
-            {infoLoading ? "Saving…" : "Save changes"}
+          <button type="submit" disabled={infoLoading} className="btn-primary mt-2">
+            {infoLoading ? "Saving…" : "Save Changes"}
           </button>
         </form>
       </div>
 
-      <div className="card">
-        <h2 className="font-medium text-neutral-900">Password manager</h2>
+      <div className="card bg-white dark:bg-neutral-800 dark:border-neutral-700/60 shadow-sm">
+        <h2 className="font-semibold text-neutral-900 dark:text-neutral-50 border-b border-neutral-100 dark:border-neutral-700/60 pb-3">
+          Password Manager
+        </h2>
         <form onSubmit={changePassword} className="mt-4 space-y-4">
           <div>
-            <label className="label">Current password</label>
+            <label className="label dark:text-neutral-300">Current Password</label>
             <input
               type="password"
-              className="input-field"
+              className="input-field dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-50"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="••••••••"
             />
           </div>
           <div>
-            <label className="label">New password</label>
+            <label className="label dark:text-neutral-300">New Password</label>
             <input
               type="password"
               minLength={8}
-              className="input-field"
+              className="input-field dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-50"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Min 8 characters"
             />
           </div>
 
-          {pwError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{pwError}</p>}
-          {pwSaved && <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">Password updated.</p>}
-
-          <button type="submit" disabled={pwLoading} className="btn-primary">
-            {pwLoading ? "Updating…" : "Change password"}
+          <button type="submit" disabled={pwLoading} className="btn-primary mt-2">
+            {pwLoading ? "Updating…" : "Change Password"}
           </button>
         </form>
       </div>
 
-      <button onClick={() => signOut({ callbackUrl: "/login" })} className="btn-secondary">
+      <button
+        onClick={() => signOut({ callbackUrl: "/login" })}
+        className="btn-secondary w-full sm:w-auto"
+      >
         Log out
       </button>
     </div>

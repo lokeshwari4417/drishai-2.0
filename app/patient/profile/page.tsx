@@ -22,6 +22,7 @@ export default async function PatientProfilePage() {
           age={patient?.age}
           gender={patient?.gender}
           contactNumber={patient?.contactNumber ?? undefined}
+          isPatient={true}
         />
       </div>
     </div>

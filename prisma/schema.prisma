@@ -1,47 +1,62 @@
 // DrishAI database schema
-// Dev default: SQLite (zero setup). Swap provider to "postgresql" and set
-// DATABASE_URL to a Supabase/Postgres connection string for production.
-//
-// NOTE ON ROLE/DRSTAGE/EYESIDE FIELDS: these are plain Strings, not Prisma
-// enums. SQLite doesn't support native enum types at all, so Prisma refuses
-// to validate a schema that declares `enum` blocks against a sqlite
-// datasource. The set of valid values is enforced at the application layer
-// instead (see the zod schemas in the API routes and the TS union types in
-// lib/auth.ts and lib/dr-stages.ts). If you switch to Postgres/MySQL later,
-// you can optionally convert these back to real `enum` types.
+// Swapped provider to "mysql" for production MySQL database.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  phoneNumber   String?
-  passwordHash  String
-  // One of: PATIENT | DOCTOR | NGO | ADMIN — validated by zod at the API layer.
-  role          String    @default("PATIENT")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+model Role {
+  id    String @id @default(cuid())
+  name  String @unique // "PATIENT", "DOCTOR", "NGO", "ADMIN"
+  users User[]
 
-  // A user with role PATIENT is linked to exactly one Patient record.
-  patientProfile   Patient?  @relation("UserPatientProfile")
+  @@map("roles")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  phoneNumber  String?
+  passwordHash String
+  isBlocked    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  // Profile relations
+  patientProfile Patient? @relation("UserPatientProfile")
+  adminProfile   Admin?   @relation("UserAdminProfile")
 
   // Doctors/NGO/Admin staff can be the creator of many patient records.
-  createdPatients  Patient[] @relation("PatientCreatedBy")
+  createdPatients Patient[] @relation("PatientCreatedBy")
 
   // Screenings an NGO/org has routed to this doctor for review.
   receivedScreenings ScreeningRecord[] @relation("ScreeningSentToDoctor")
 
-  resetTokens PasswordResetToken[]
+  resetTokens    PasswordResetToken[]
+  loginHistories LoginHistory[]
+  activityLogs   ActivityLog[]
+  otps           Otp[]
 
   @@map("users")
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation("UserAdminProfile", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins")
 }
 
 model PasswordResetToken {
@@ -57,73 +72,107 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
+model Otp {
+  id        String   @id @default(cuid())
+  code      String
+  expiresAt DateTime
+  resendAt  DateTime
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("otps")
+}
+
+model LoginHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress String?
+  userAgent String?
+  status    String   // "SUCCESS" or "FAILED"
+  loggedAt  DateTime @default(now())
+
+  @@map("login_histories")
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String   // e.g. "LOGIN", "OTP_VERIFIED", "BLOCK_USER", "UNBLOCK_USER", etc.
+  details   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@map("activity_logs")
+}
+
 model Patient {
-  id                String   @id @default(cuid())
-  name              String
-  age               Int
-  gender            String
-  diabetesDuration  Int?     // years
-  contactNumber     String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               String   @id @default(cuid())
+  name             String
+  age              Int
+  gender           String
+  diabetesDuration Int? // years
+  contactNumber    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   // Optional link if the patient also has their own login (role PATIENT)
-  userId            String?  @unique
-  user              User?    @relation("UserPatientProfile", fields: [userId], references: [id])
+  userId String? @unique
+  user   User?   @relation("UserPatientProfile", fields: [userId], references: [id])
 
   // Doctor / NGO / Admin who created & manages this patient record
-  createdById       String
-  createdBy         User     @relation("PatientCreatedBy", fields: [createdById], references: [id])
+  createdById String
+  createdBy   User   @relation("PatientCreatedBy", fields: [createdById], references: [id])
 
-  screenings        ScreeningRecord[]
+  screenings ScreeningRecord[]
 
   @@map("patients")
 }
 
 model ScreeningRecord {
-  id               String     @id @default(cuid())
-  screeningDate    DateTime   @default(now())
-  // One of: NO_DR | MILD | MODERATE | SEVERE | PROLIFERATIVE
-  drStage          String?
-  confidenceScore  Float?
-  recommendation   String?
-  createdAt        DateTime   @default(now())
+  id              String    @id @default(cuid())
+  screeningDate   DateTime  @default(now())
+  drStage         String?
+  confidenceScore Float?
+  recommendation  String?   @db.Text
+  createdAt       DateTime  @default(now())
 
-  patientId        String
-  patient          Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
   // Set when an NGO/org routes this screening to a doctor for review.
-  sentToDoctorId   String?
-  sentToDoctor     User?      @relation("ScreeningSentToDoctor", fields: [sentToDoctorId], references: [id])
-  sentAt           DateTime?
+  sentToDoctorId String?
+  sentToDoctor   User?     @relation("ScreeningSentToDoctor", fields: [sentToDoctorId], references: [id])
+  sentAt         DateTime?
 
-  images           RetinalImage[]
-  analysis         AiAnalysis?
+  images   RetinalImage[]
+  analysis AiAnalysis?
 
   @@map("screening_records")
 }
 
 model RetinalImage {
-  id           String   @id @default(cuid())
-  imagePath    String
-  // One of: LEFT | RIGHT
-  eyeSide      String
-  capturedAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  imagePath String   @db.Text
+  eyeSide   String
+  capturedAt DateTime @default(now())
 
-  screeningId  String
-  screening    ScreeningRecord @relation(fields: [screeningId], references: [id], onDelete: Cascade)
+  screeningId String
+  screening   ScreeningRecord @relation(fields: [screeningId], references: [id], onDelete: Cascade)
 
   @@map("retinal_images")
 }
 
 model AiAnalysis {
-  id            String   @id @default(cuid())
-  modelVersion  String
-  heatmapPath   String?
-  analyzedAt    DateTime @default(now())
+  id           String   @id @default(cuid())
+  modelVersion String
+  heatmapPath  String?  @db.Text
+  analyzedAt   DateTime @default(now())
 
-  screeningId   String   @unique
-  screening     ScreeningRecord @relation(fields: [screeningId], references: [id], onDelete: Cascade)
+  screeningId String          @unique
+  screening   ScreeningRecord @relation(fields: [screeningId], references: [id], onDelete: Cascade)
 
   @@map("ai_analyses")
 }

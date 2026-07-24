@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import AuthSessionProvider from "@/components/session-provider";
+import { ToastProvider } from "@/components/toast";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const fraunces = Fraunces({
@@ -26,8 +27,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable}`}>
       <body>
-        <AuthSessionProvider>{children}</AuthSessionProvider>
+        <AuthSessionProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AuthSessionProvider>
       </body>
     </html>
   );
 }
+

@@ -2,7 +2,6 @@ import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
 // Which roles are allowed under each top-level protected path.
-// Admin is intentionally given access everywhere for moderation/support.
 const ROUTE_ROLES: Record<string, string[]> = {
   "/patient": ["PATIENT", "ADMIN"],
   "/doctor": ["DOCTOR", "ADMIN"],
@@ -28,10 +27,9 @@ export default withAuth(
     );
 
     if (matchedPrefix && role && !ROUTE_ROLES[matchedPrefix].includes(role)) {
-      // The Admin Panel gets a dedicated denial message instead of a
-      // silent bounce, per the "Admin access only" requirement.
+      // If a non-admin attempts to access any admin path, send them to the denied page.
       if (matchedPrefix === "/admin") {
-        return NextResponse.redirect(new URL("/login?error=AdminOnly", req.url));
+        return NextResponse.redirect(new URL("/admin-denied", req.url));
       }
 
       // Any other section: logged in, but wrong role -> bounce to their own home.
@@ -43,8 +41,6 @@ export default withAuth(
   },
   {
     callbacks: {
-      // Just confirms a valid session exists; the function above handles
-      // the finer-grained role check.
       authorized: ({ token }) => !!token,
     },
     pages: {
