@@ -24,12 +24,29 @@ export default function LoginPage() {
       redirect: false,
     });
 
-    setLoading(false);
-
     if (result?.error) {
-      setError(result.error);
+      // next-auth normalizes credential errors to a generic code, so we
+      // determine the specific reason ourselves for a clearer message.
+      try {
+        const check = await fetch("/api/auth/user-exists", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const { exists } = await check.json();
+        setError(
+          exists
+            ? "Incorrect password. Try again or reset your password."
+            : "No account found with that email. Check the address or register."
+        );
+      } catch {
+        setError("Couldn't log in. Please check your details and try again.");
+      }
+      setLoading(false);
       return;
     }
+
+    setLoading(false);
 
     // Session doesn't carry role synchronously here, so let a lightweight
     // server route decide the right dashboard for this user's role.
@@ -60,7 +77,12 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="label" htmlFor="password">Password</label>
+            <div className="flex items-center justify-between">
+              <label className="label !mb-1.5" htmlFor="password">Password</label>
+              <Link href="/forgot-password" className="mb-1.5 text-xs font-medium text-brand-700 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
             <input
               id="password"
               type="password"

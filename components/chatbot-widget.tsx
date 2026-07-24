@@ -22,6 +22,12 @@ export default function ChatbotWidget() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, open]);
 
+  useEffect(() => {
+    const openHandler = () => setOpen(true);
+    window.addEventListener("drishai:open-chatbot", openHandler);
+    return () => window.removeEventListener("drishai:open-chatbot", openHandler);
+  }, []);
+
   async function send(text: string) {
     if (!text.trim() || sending) return;
     const history = messages.slice(-10).map((m) => ({ role: m.role, text: m.text }));

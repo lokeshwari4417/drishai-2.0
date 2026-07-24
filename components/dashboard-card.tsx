@@ -1,21 +1,22 @@
+"use client";
+
 import Link from "next/link";
 import { LucideIcon, ArrowRight } from "lucide-react";
 
-export default function DashboardCard({
-  icon: Icon,
-  title,
-  desc,
-  href,
-  cta,
-}: {
+interface DashboardCardProps {
   icon: LucideIcon;
   title: string;
   desc: string;
-  href: string;
   cta: string;
-}) {
-  return (
-    <Link href={href} className="card-interactive group flex flex-col justify-between">
+  /** Navigate to a route (use this OR onClick, not both) */
+  href?: string;
+  /** Run an action instead of navigating (e.g. opening the chat widget) */
+  onClick?: () => void;
+}
+
+export default function DashboardCard({ icon: Icon, title, desc, href, cta, onClick }: DashboardCardProps) {
+  const content = (
+    <>
       <div>
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600 transition-colors group-hover:bg-brand-100">
           <Icon size={20} />
@@ -27,6 +28,20 @@ export default function DashboardCard({
         {cta}
         <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
       </span>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button onClick={onClick} className="card-interactive group flex w-full flex-col justify-between text-left">
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <Link href={href ?? "#"} className="card-interactive group flex flex-col justify-between">
+      {content}
     </Link>
   );
 }

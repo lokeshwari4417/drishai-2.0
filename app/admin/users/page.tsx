@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { KeyRound, Copy, Check } from "lucide-react";
 
 interface UserRow {
   id: string;
@@ -17,6 +18,8 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [revealedPassword, setRevealedPassword] = useState<{ userId: string; password: string } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   async function load() {
     try {
@@ -51,10 +54,44 @@ export default function AdminUsersPage() {
     setBusyId(null);
   }
 
+  async function resetPassword(id: string) {
+    if (!confirm("Reset this user's password? Their current password will stop working immediately.")) return;
+    setBusyId(id);
+    setRevealedPassword(null);
+    try {
+      const res = await fetch(`/api/users/${id}/reset-password`, { method: "POST" });
+      const data = await res.json();
+      if (res.ok) setRevealedPassword({ userId: id, password: data.tempPassword });
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  function copyPassword() {
+    if (!revealedPassword) return;
+    navigator.clipboard.writeText(revealedPassword.password);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-neutral-900">User management</h1>
-      <p className="mt-1 text-sm text-neutral-500">Change roles or remove accounts.</p>
+      <h1 className="font-display text-2xl text-neutral-900">User management</h1>
+      <p className="mt-1 text-sm text-neutral-500">Change roles, reset passwords, or remove accounts.</p>
+
+      {revealedPassword && (
+        <div className="mt-4 flex animate-fade-up items-center gap-3 rounded-lg border border-accent-200 bg-accent-50 px-4 py-3">
+          <KeyRound size={16} className="shrink-0 text-accent-600" />
+          <p className="flex-1 text-sm text-accent-600">
+            New temporary password: <code className="rounded bg-white px-1.5 py-0.5 font-mono">{revealedPassword.password}</code>
+            {" "}— share this with the user securely (not over an unsecured channel) and ask them to change it after logging in. This won't be shown again.
+          </p>
+          <button onClick={copyPassword} className="btn-secondary shrink-0 !px-3 !py-1.5 text-xs">
+            {copied ? <Check size={14} className="mr-1" /> : <Copy size={14} className="mr-1" />}
+            {copied ? "Copied" : "Copy"}
+          </button>
+        </div>
+      )}
 
       <div className="card mt-6 overflow-hidden !p-0">
         <table className="w-full text-left text-sm">
@@ -92,13 +129,22 @@ export default function AdminUsersPage() {
                 </td>
                 <td className="px-4 py-3 text-neutral-600">{u._count.createdPatients}</td>
                 <td className="px-4 py-3 text-right">
-                  <button
-                    onClick={() => deleteUser(u.id)}
-                    disabled={busyId === u.id}
-                    className="text-xs font-medium text-red-600 hover:underline"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex items-center justify-end gap-3">
+                    <button
+                      onClick={() => resetPassword(u.id)}
+                      disabled={busyId === u.id}
+                      className="text-xs font-medium text-brand-700 hover:underline"
+                    >
+                      Reset password
+                    </button>
+                    <button
+                      onClick={() => deleteUser(u.id)}
+                      disabled={busyId === u.id}
+                      className="text-xs font-medium text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

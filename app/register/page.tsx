@@ -21,6 +21,8 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>("PATIENT");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("Female");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -33,7 +35,14 @@ export default function RegisterPage() {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role,
+          ...(role === "PATIENT" && age ? { age: Number(age) } : {}),
+          ...(role === "PATIENT" ? { gender } : {}),
+        }),
       });
 
       const data = await res.json();
@@ -126,6 +135,32 @@ export default function RegisterPage() {
               placeholder="At least 8 characters"
             />
           </div>
+
+          {role === "PATIENT" && (
+            <div className="grid animate-fade-in grid-cols-2 gap-4">
+              <div>
+                <label className="label" htmlFor="age">Age</label>
+                <input
+                  id="age"
+                  type="number"
+                  min={0}
+                  max={130}
+                  className="input-field"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="label" htmlFor="gender">Gender</label>
+                <select id="gender" className="input-field" value={gender} onChange={(e) => setGender(e.target.value)}>
+                  <option>Female</option>
+                  <option>Male</option>
+                  <option>Other</option>
+                  <option>Prefer not to say</option>
+                </select>
+              </div>
+            </div>
+          )}
 
           {error && (
             <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
