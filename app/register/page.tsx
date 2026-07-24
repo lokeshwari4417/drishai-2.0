@@ -6,13 +6,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DisclaimerBanner from "@/components/disclaimer-banner";
 
-type Role = "PATIENT" | "DOCTOR" | "NGO" | "ADMIN";
+type Role = "PATIENT" | "DOCTOR" | "NGO";
 
 const ROLE_OPTIONS: { value: Role; label: string; blurb: string }[] = [
   { value: "PATIENT", label: "Patient", blurb: "Take/upload your own scans and view reports" },
   { value: "DOCTOR", label: "Doctor", blurb: "Manage patients and review AI screening results" },
   { value: "NGO", label: "NGO / Organization", blurb: "Run screening camps at scale" },
-  { value: "ADMIN", label: "Admin", blurb: "Manage the platform, users, and roles" },
 ];
 
 export default function RegisterPage() {

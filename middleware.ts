@@ -28,7 +28,13 @@ export default withAuth(
     );
 
     if (matchedPrefix && role && !ROUTE_ROLES[matchedPrefix].includes(role)) {
-      // Logged in, but wrong role for this section -> bounce to their own home.
+      // The Admin Panel gets a dedicated denial message instead of a
+      // silent bounce, per the "Admin access only" requirement.
+      if (matchedPrefix === "/admin") {
+        return NextResponse.redirect(new URL("/login?error=AdminOnly", req.url));
+      }
+
+      // Any other section: logged in, but wrong role -> bounce to their own home.
       const home = ROLE_HOME[role] ?? "/login";
       return NextResponse.redirect(new URL(home, req.url));
     }

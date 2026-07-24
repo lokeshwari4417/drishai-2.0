@@ -1,17 +1,24 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { Suspense, useEffect, useState, FormEvent } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import DisclaimerBanner from "@/components/disclaimer-banner";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("error") === "AdminOnly") {
+      setError("Access Denied. Admin access only.");
+    }
+  }, [searchParams]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -28,7 +35,7 @@ export default function LoginPage() {
       // Deliberately generic: we don't reveal whether the email exists
       // or the password was wrong, to avoid leaking which emails are
       // registered.
-      setError("The email or password you entered is incorrect. Please try again.");
+      setError("Incorrect email or password. Please try again.");
       setLoading(false);
       return;
     }
@@ -103,5 +110,13 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }
