@@ -12,15 +12,12 @@ import { MODEL_INPUT_SIZE } from "@/lib/image-preprocess";
  * present yet, it falls back to a deterministic mock so the rest of the
  * app (report screen, DB writes, dashboards) is fully testable already.
  *
- * TO PLUG IN YOUR TRAINED MODEL:
- *   1. Export it as a TF.js layers/graph model (model.json + shard .bin files).
- *   2. Drop the files into /public/models/dr-model/  (so they're served at
- *      /models/dr-model/model.json).
- *   3. If your model's output isn't a 5-way softmax over
- *      [No DR, Mild, Moderate, Severe, Proliferative] in that order, adjust
- *      `interpretOutput()` below to match your model's actual output shape.
- *   That's it — no other code changes needed, `runInference()` will pick
- *   the real model up automatically and stop using the mock.
+ * MODEL OUTPUT ORDER:
+ *   This model was trained on Kaggle's APTOS dataset with folders read in
+ *   alphabetical order, giving output index order:
+ *     0=Mild, 1=Moderate, 2=No_DR, 3=Proliferate_DR, 4=Severe
+ *   MODEL_INDEX_TO_GRADE below remaps that to this app's grade scale
+ *   (0=No DR, 1=Mild, 2=Moderate, 3=Severe, 4=Proliferative).
  */
 
 export interface InferenceResult {
@@ -33,6 +30,15 @@ export interface InferenceResult {
 }
 
 const MODEL_URL = "/models/dr-model/model.json";
+
+// Maps the trained model's raw output index -> this app's DR_STAGES grade
+const MODEL_INDEX_TO_GRADE: Record<number, 0 | 1 | 2 | 3 | 4> = {
+  0: 1, // Mild           -> grade 1 (Mild)
+  1: 2, // Moderate       -> grade 2 (Moderate)
+  2: 0, // No_DR          -> grade 0 (No DR)
+  3: 4, // Proliferate_DR -> grade 4 (Proliferative)
+  4: 3, // Severe         -> grade 3 (Severe)
+};
 
 let cachedModel: import("@tensorflow/tfjs").LayersModel | null | undefined;
 
@@ -67,7 +73,8 @@ function interpretOutput(
       bestIdx = i;
     }
   }
-  return { grade: bestIdx as 0 | 1 | 2 | 3 | 4, confidence: bestVal };
+  const grade = MODEL_INDEX_TO_GRADE[bestIdx];
+  return { grade, confidence: bestVal };
 }
 
 /**
@@ -95,13 +102,8 @@ function mockInference(canvas: HTMLCanvasElement): { grade: 0 | 1 | 2 | 3 | 4; c
   }
   variance = variance / n;
 
-  // Map texture variance (a rough proxy for lesion-like detail in a mock
-  // context only) onto a stage 0-4, and mean brightness onto a confidence
-  // band. This has no clinical meaning — it exists purely so the upload →
-  // report → database flow can be built and tested before the real model
-  // is wired in.
   const grade = Math.min(4, Math.floor(variance / 900)) as 0 | 1 | 2 | 3 | 4;
-  const confidence = 0.72 + (mean % 20) / 100; // lands roughly in 0.72–0.91
+  const confidence = 0.72 + (mean % 20) / 100;
 
   return { grade, confidence: Math.min(confidence, 0.97) };
 }
@@ -128,8 +130,7 @@ export async function runInference(canvas: HTMLCanvasElement): Promise<Inference
       .fromPixels(canvas)
       .resizeBilinear([MODEL_INPUT_SIZE, MODEL_INPUT_SIZE])
       .toFloat()
-      .div(255)
-      .expandDims(0);
+      .expandDims(0); // no .div(255) — the model has its own internal Rescaling layer
     return model.predict(tensor) as import("@tensorflow/tfjs").Tensor;
   });
 
