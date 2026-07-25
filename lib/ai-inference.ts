@@ -29,7 +29,7 @@ export interface InferenceResult {
   inferenceMs: number;
 }
 
-const MODEL_URL = "/models/dr-model/model.json";
+const MODEL_URL = "/models/dr-model/model.json?v=2";
 
 // Maps the trained model's raw output index -> this app's DR_STAGES grade
 const MODEL_INDEX_TO_GRADE: Record<number, 0 | 1 | 2 | 3 | 4> = {
@@ -42,21 +42,16 @@ const MODEL_INDEX_TO_GRADE: Record<number, 0 | 1 | 2 | 3 | 4> = {
 
 let cachedModel: import("@tensorflow/tfjs").LayersModel | null | undefined;
 
-/** Tries to fetch/load the real model once; caches the result (including "not found"). */
+/** Tries to load the real model once; caches the result (including "failed"). */
 async function getModel() {
   if (cachedModel !== undefined) return cachedModel;
 
   try {
-    const head = await fetch(MODEL_URL, { method: "HEAD" });
-    if (!head.ok) {
-      cachedModel = null;
-      return cachedModel;
-    }
-
     const tf = await import("@tensorflow/tfjs");
     cachedModel = await tf.loadLayersModel(MODEL_URL);
     return cachedModel;
-  } catch {
+  } catch (err) {
+    console.error("Model failed to load:", err);
     cachedModel = null;
     return cachedModel;
   }

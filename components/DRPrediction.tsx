@@ -18,7 +18,7 @@ export default function DRPrediction() {
     imageElement.src = URL.createObjectURL(file);
 
     imageElement.onload = async () => {
-      const model = await tf.loadLayersModel('/models/dr-model/model.json');
+      const model = await tf.loadLayersModel('/models/dr-model/model.json?v=2');
 
       let tensor = tf.browser
         .fromPixels(imageElement)
