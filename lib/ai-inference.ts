@@ -48,6 +48,63 @@ async function getModel() {
 
   try {
     const tf = await import("@tensorflow/tfjs");
+    
+    // Register custom Normalization layer (missing in tfjs)
+    class Normalization extends tf.layers.Layer {
+      static get className() {
+        return 'Normalization';
+      }
+
+      constructor(config: any) {
+        super(config);
+      }
+
+      build(inputShape: any) {
+        const lastDim = inputShape[inputShape.length - 1];
+        (this as any).mean = this.addWeight(
+          'mean',
+          [lastDim],
+          'float32',
+          tf.initializers.zeros()
+        );
+        (this as any).variance = this.addWeight(
+          'variance',
+          [lastDim],
+          'float32',
+          tf.initializers.ones()
+        );
+        (this as any).count = this.addWeight(
+          'count',
+          [],
+          'int32',
+          tf.initializers.zeros()
+        );
+        this.built = true;
+      }
+
+      call(inputs: any, kwargs: any) {
+        return tf.tidy(() => {
+          const input = inputs[0];
+          const epsilon = 1e-3;
+          const meanVal = (this as any).mean.read();
+          const varianceVal = (this as any).variance.read();
+          
+          const stdVal = tf.sqrt(tf.add(varianceVal, epsilon));
+          return tf.div(tf.sub(input, meanVal), stdVal);
+        });
+      }
+
+      computeOutputShape(inputShape: any) {
+        return inputShape;
+      }
+    }
+    
+    try {
+      tf.serialization.registerClass(Normalization);
+    } catch (e) {
+      // Ignore if already registered
+    }
+
     cachedModel = await tf.loadLayersModel(MODEL_URL);
     return cachedModel;
   } catch (err) {
