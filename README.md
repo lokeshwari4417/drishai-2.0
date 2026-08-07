@@ -40,12 +40,7 @@ npm run dev
 
 Visit `http://localhost:3000`. Demo logins after seeding:
 
-| Role   | Email                | Password      |
-|--------|-----------------------|----------------|
-| Admin  | admin@drishai.dev     | password123    |
-| Doctor | doctor@drishai.dev    | password123    |
-| NGO    | ngo@drishai.dev       | password123    |
-| Patient| patient@drishai.dev   | password123    |
+
 
 ## Project structure
 
